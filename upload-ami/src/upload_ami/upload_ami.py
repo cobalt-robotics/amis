@@ -123,6 +123,7 @@ def register_image_if_not_exists(
     image_info: ImageInfo,
     snapshot_id: str,
     public: bool,
+    description: str,
 ) -> str:
     """
     Register image if it doesn't exist yet
@@ -156,6 +157,7 @@ def register_image_if_not_exists(
 
         register_image = ec2.register_image(
             Name=image_name,
+            Description=description,
             Architecture=architecture,
             BootMode=image_info["boot_mode"],
             BlockDeviceMappings=[
@@ -298,6 +300,7 @@ def upload_ami(
     prefix: str,
     run_id: str,
     public: bool,
+    description: str,
 ) -> dict[str, str]:
     """
     Upload NixOS AMI to AWS and return the image ids for each region
@@ -319,7 +322,7 @@ def upload_ami(
     )
 
     image_id = register_image_if_not_exists(
-        ec2, image_name, image_info, snapshot_id, public
+        ec2, image_name, image_info, snapshot_id, public, description
     )
 
     regions = filter(
@@ -347,6 +350,7 @@ def main() -> None:
     parser.add_argument("--image-info", help="Path to image info", required=True)
     parser.add_argument("--s3-bucket", help="S3 bucket to upload to", required=True)
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--description", help="Image description", default="")
     parser.add_argument("--cleanup", action="store_true")
     parser.add_argument("--copy-to-regions", action="store_true")
     parser.add_argument("--public", action="store_true")
@@ -368,6 +372,7 @@ def main() -> None:
         args.prefix,
         args.run_id,
         args.public,
+        args.description,
     )
     print(json.dumps(image_ids))
 
